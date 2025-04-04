@@ -13,6 +13,11 @@ git submodule update --init --recursive
 # Navigate to vcpkg directory
 cd $VCPKG_DIR
 
+# Update vcpkg to latest version
+echo "Updating vcpkg to latest version..."
+git checkout master
+git pull origin master
+
 # Bootstrap vcpkg
 echo "Bootstrapping vcpkg..."
 ./bootstrap-vcpkg.sh
