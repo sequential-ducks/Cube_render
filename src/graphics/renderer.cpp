@@ -273,8 +273,9 @@ shelfTexture_{nullptr}, duckyTexture_{nullptr}
   
 }
 
-void Renderer::GL_State::Draw()
+void Renderer::GL_State::Draw(const std::unique_ptr<Window>& window)
 {
+    const auto &clock = window.get()->getClock();
     // Use the shader program for rendering
     glUseProgram(shaderProgram_->getProgramID());
         
@@ -294,7 +295,18 @@ void Renderer::GL_State::Draw()
     // "texture2" corresponds to the ducky texture bound to texture unit 1
     shaderProgram_.get()->setUniform("texture2", 
                             Renderer::GlConstants::DEFAULT_TEXTURE_UNIT + 1);
+    
 
+    // Create transformation 
+    // Create a 4x4 identity matrix for transformations.
+    glm::mat4 translateM{1.0f};
+    // Rotate 90 degrees around the z-axis.
+    translateM = glm::translate(translateM, glm::vec3(0.5f, -0.5f, 0.0f));
+    // Scale all axes to be 50% smaller.
+    translateM = glm::rotate(translateM, clock->getElapsedTime().asSeconds(), 
+                            glm::vec3(0.5f, 0.5f, 0.5f));
+
+    shaderProgram_.get()->setUniform("transform", translateM);
     // Bind the Vertex Array Object (VAO) that contains the vertex data
     glBindVertexArray(myBuffer_->getVAOId());
 

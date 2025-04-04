@@ -44,6 +44,10 @@
 #include <string>      // For handling std::string operations.
 #include <stb_image.h> // For loading image files into memory for textures.
 #include <array>       // For using std::array for fixed-size arrays.
+#include <glm/glm.hpp> // OpenGL Mathematics library
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 namespace Env
 {
@@ -391,7 +395,8 @@ namespace Renderer
          * determined by the template parameter, allowing flexibility for
          * different uniform types (int, float, bool).
          * 
-         * @tparam T The type of the uniform variable (int, float, bool).
+         * @tparam T The type of the uniform variable (int, float, bool, 
+         *           4x4 matrix).
          * @param name The name of the uniform variable in the shader program.
          * @param value The value to set for the uniform variable.
          * 
@@ -415,6 +420,9 @@ namespace Renderer
             else if constexpr (std::is_same_v<T, float>)
             {
                 glUniform1f(location, value);
+            }else if constexpr (std::is_same_v<T, glm::mat4>)
+            {
+                glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
             }
             else
             {
@@ -600,8 +608,9 @@ namespace Renderer
          * This method binds the necessary OpenGL resources, such as shaders, 
          * textures, and buffers, and issues draw calls to render the scene. 
          * It assumes that the OpenGL context is properly initialized and active.
+         * @param window The window context where to draw. 
          */
-        void Draw();
+        void Draw(const std::unique_ptr<Window>& window);
         
         // Delete copy constructor and copy assignment operator
         GL_State(const GL_State&) = delete;  
