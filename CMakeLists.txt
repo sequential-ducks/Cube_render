@@ -57,10 +57,10 @@ else()
 endif()
 
 # Simple and fast multimedia library
-find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
+find_package(SFML COMPONENTS Graphics Window System CONFIG REQUIRED)
 if(SFML_FOUND)
     message(STATUS "SFML3 found at ${SFML_DIR}")
-    target_link_libraries(${PROJECT_NAME} PRIVATE sfml-system sfml-network sfml-graphics sfml-window)
+    target_link_libraries(${PROJECT_NAME} PRIVATE SFML::Graphics)
 else()
     message(FATAL_ERROR "SFML3 not found. Install it with vcpkg.")
 endif()

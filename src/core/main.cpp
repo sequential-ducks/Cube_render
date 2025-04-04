@@ -4,11 +4,25 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 #include <iostream> // for std::cerr 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
+void math()
+{
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 translateM{1.0f};
+    translateM = glm::translate(translateM, glm::vec3(vec.x, vec.y, vec.x));
+    vec = translateM * vec;    
+    std::cout << " vec x: " << vec.x << " vec y: " << vec.y << " vec z: " << vec.z << std::endl;
+}
 
 
 // Function to create and initialize an SFML window with OpenGL context
 void CreateWindow(std::unique_ptr<sf::RenderWindow>& windowPtr)
 {
+    math();
     // Configure OpenGL context settings
     sf::ContextSettings settings;
     // Request a 24-bit depth buffer for 3D rendering
@@ -16,7 +30,7 @@ void CreateWindow(std::unique_ptr<sf::RenderWindow>& windowPtr)
     // Request an 8-bit stencil buffer for advanced effects
     settings.stencilBits = 8; 
     // Enable 4x antialiasing for smoother edges
-    settings.antialiasingLevel = 4; 
+    settings.antiAliasingLevel = 4; 
     // Request OpenGL version 4.3
     settings.majorVersion = 4; 
     settings.minorVersion = 3;
@@ -28,7 +42,7 @@ void CreateWindow(std::unique_ptr<sf::RenderWindow>& windowPtr)
     (
         sf::VideoMode({WindowAttributes::WINDOW_WIDTH, 
                       WindowAttributes::WINDOW_HEIGHT}), 
-                      WindowAttributes::WINDOW_TITLE, sf::Style::Default, 
+                      WindowAttributes::WINDOW_TITLE, sf::State::Windowed,
                       settings 
     );
 
@@ -71,22 +85,20 @@ int main()
     // Main application loop
     while (window.get()->isOpen())
     {
-        // Handle window events
-        sf::Event event;
-        while (window.get()->pollEvent(event))
+        while (const std::optional event = window.get()->pollEvent())
         {
-            if (event.type == sf::Event::Closed)
+            if (event->is<sf::Event::Closed>())
             {
-                // If the window is closed, exit the loop
                 window.get()->close();
             }
-            else if (event.type == sf::Event::Resized)
+            else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
             {
-                // Adjust the OpenGL viewport when the window is resized
-                glViewport(0, 0, event.size.width, event.size.height);
+                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                {
+                    window.get()->close();
+                }
             }
         }
-
         // Clear the color and depth buffers for the next frame
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
