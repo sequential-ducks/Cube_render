@@ -1,8 +1,5 @@
 #include "window.hpp"
 
-
-// Create the SFML window with the specified settings
-// The window is initialized in the initializer list
 Window::Window() : sf::RenderWindow(sf::VideoMode
     ({WindowAttributes::WINDOW_WIDTH, WindowAttributes::WINDOW_HEIGHT}), 
     WindowAttributes::WINDOW_TITLE, sf::State::Windowed, 

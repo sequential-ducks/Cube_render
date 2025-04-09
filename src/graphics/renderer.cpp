@@ -1,6 +1,36 @@
 #include "renderer.hpp"
 
 /**
+ * @namespace CoordinateSystems
+ * @brief Coordinate transform matrices
+ */
+namespace Renderer::CoordinateSystems
+{
+    // The model matrix consists of translations, scaling and/or 
+    // rotations we'd like to apply to transform all object's vertices to 
+    // the global world space. 
+    // This rotates a plane sligthly along the negative x-axis.
+    glm::mat4 model = glm::rotate(
+        glm::mat4(1.0f), 
+        glm::radians(-55.0f), 
+        glm::vec3(1.0f, 0.0f, 0.0f)
+    );
+    // Translate the scene forward (towards negative z) to give impression
+    // of moving forward
+    glm::mat4 view = glm::translate(
+        glm::mat4(1.0f), 
+        glm::vec3(0.0f, 0.0f, -3.0f)
+    );
+    // Use a perspective projection
+    glm::mat4 projection = glm::perspective(
+        glm::radians(45.0f),
+        static_cast<float>(WindowAttributes::WINDOW_WIDTH / WindowAttributes::WINDOW_HEIGHT),
+        0.1f,
+        1000.0f
+    );
+}
+
+/**
  * @fn MessageCallback
  * @brief Callback function for handling OpenGL debug messages.
  *
@@ -192,8 +222,8 @@ Renderer::FragmentShader::FragmentShader() : Shader(Env::FRAG_SHADER_PATH)
     checkShaderCompilation("FRAGMENT");
 }
 
-// Constructor for Program, links vertex and fragment shaders into a program
-Renderer::Program::Program(const unsigned int vertexShaderID, 
+// Constructor for ShaderProgram, links vertex and fragment shaders into a program
+Renderer::ShaderProgram::ShaderProgram(const unsigned int vertexShaderID, 
                  const unsigned int fragShaderID)
 {
     int success; // Variable to store the linking status
@@ -261,7 +291,7 @@ shelfTexture_{nullptr}, duckyTexture_{nullptr}
     auto fragShader = FragmentShader();
 
     // Use the compiled shaders to get a linked shader program
-    shaderProgram_ = std::make_unique<Program>(vertexShader.getShaderID(), 
+    shaderProgram_ = std::make_unique<ShaderProgram>(vertexShader.getShaderID(), 
                                                 fragShader.getShaderID());
 
     // Move vertice data to the GPU buffer
@@ -296,17 +326,13 @@ void Renderer::GL_State::Draw(const std::unique_ptr<Window>& window)
     shaderProgram_.get()->setUniform("texture2", 
                             Renderer::GlConstants::DEFAULT_TEXTURE_UNIT + 1);
     
+    // Set the vertice coordinate transformation matrices in our shader program.
+    shaderProgram_.get()->setUniform("model", 
+                                    Renderer::CoordinateSystems::model);
+    shaderProgram_.get()->setUniform("projection", 
+                                    Renderer::CoordinateSystems::projection);
+    shaderProgram_.get()->setUniform("view", Renderer::CoordinateSystems::view);
 
-    // Create transformation 
-    // Create a 4x4 identity matrix for transformations.
-    glm::mat4 translateM{1.0f};
-    // Rotate 90 degrees around the z-axis.
-    translateM = glm::translate(translateM, glm::vec3(0.5f, -0.5f, 0.0f));
-    // Scale all axes to be 50% smaller.
-    translateM = glm::rotate(translateM, clock->getElapsedTime().asSeconds(), 
-                            glm::vec3(0.5f, 0.5f, 0.5f));
-
-    shaderProgram_.get()->setUniform("transform", translateM);
     // Bind the Vertex Array Object (VAO) that contains the vertex data
     glBindVertexArray(myBuffer_->getVAOId());
 
@@ -315,6 +341,7 @@ void Renderer::GL_State::Draw(const std::unique_ptr<Window>& window)
     (   Renderer::GlConstants::DRAW_MODE, Renderer::GlConstants::INDICES_COUNT,
         Renderer::GlConstants::INDICE_TYPE, 0
     );
+
 }
 
 Renderer::BufferSetup::BufferSetup()

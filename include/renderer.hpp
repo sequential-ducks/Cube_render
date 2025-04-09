@@ -17,7 +17,7 @@
  *            for texture management.
  * - Shader: Represents GLSL shaders and provides functionality for shader 
  *           compilation and management.
- * - Program: Manages shader programs by linking vertex and fragment shaders.
+ * - ShaderProgram: Manages shader programs by linking vertex and fragment shaders.
  * - BufferSetup: Handles OpenGL buffer setup and configuration, including VAOs, 
  *                VBOs, and EBOs.
  * - GL_State: Manages the OpenGL rendering context and sets up necessary 
@@ -73,7 +73,7 @@ namespace Renderer
     namespace Vertex 
     {
     /**
-     * @namespace Vector
+     * @namespace Vertex::Vector
      * @brief This namespace provides constants and enumerations to define the 
      * layout of vertex attributes such as position, color, and texture 
      * coordinates.
@@ -97,7 +97,7 @@ namespace Renderer
         }; /** @namespace Renderer::Vertex::Vector */ 
         
         /**
-         * @namespace Attribute
+         * @namespace Vertex::Attribute
          * @brief Enum class for different types of vertex buffer data
          */
         enum class Attribute
@@ -109,9 +109,9 @@ namespace Renderer
         };
     }; /** @namespace Renderer::Vertex */ 
 
-    namespace TextureAttributes
-    {
-    }; /** @namespace Renderer::TextureAttributes */ 
+
+    //namespace TextureAttributes
+    //{};
 
   /**
      * @namespace GlConstants
@@ -355,7 +355,7 @@ namespace Renderer
 
     };
 
-    class Program
+    class ShaderProgram
     {
     public:
         /**
@@ -373,12 +373,12 @@ namespace Renderer
          * 
          * @throws std::runtime_error If the shader program linking fails.
          */
-        Program(const unsigned int vertexShaderID, 
+        ShaderProgram(const unsigned int vertexShaderID, 
                 const unsigned int fragShaderID);
-        ~Program() = default;
+        ~ShaderProgram() = default;
 
         /**
-         * @fn unsigned int Program::getProgramID() const
+         * @fn unsigned int ShaderProgram::getProgramID() const
          * @brief Getter for the shader program ID.
          * @return The shader program ID.
          */
@@ -617,7 +617,7 @@ namespace Renderer
         GL_State& operator=(const GL_State&) = delete;  
     
     private:
-        std::unique_ptr<Program> shaderProgram_;
+        std::unique_ptr<ShaderProgram> shaderProgram_;
         std::unique_ptr<BufferSetup> myBuffer_;
         std::unique_ptr<Texture> shelfTexture_;
         std::unique_ptr<Texture> duckyTexture_;

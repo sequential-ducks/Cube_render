@@ -48,6 +48,6 @@ int main()
         window.get()->display();
     }
 
-    // Program executed successfully
+    // ShaderProgram executed successfully
     return 0;
 }
