@@ -45,16 +45,18 @@
 #include <stb_image.h> // For loading image files into memory for textures.
 #include <array>       // For using std::array for fixed-size arrays.
 #include <glm/glm.hpp> // OpenGL Mathematics library
+#include "stb_image.h" // For loading image files from memory for textures.
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 
+
 namespace Env
 {
-    constexpr const char* VERTEX_SHADER_PATH = "../shaders/shader.vs";
-    constexpr const char* FRAG_SHADER_PATH = "../shaders/shader.fs";
-    constexpr const char* SHELF_TEXTURE_PATH = "../resources/container.jpg";
-    constexpr const char* DUCKY_TEXTURE_PATH = "../resources/rubber-ducky.png";
+    constexpr const char* VERTEX_SHADER_PATH = "../../../shaders/shader.vs";
+    constexpr const char* FRAG_SHADER_PATH = "../../../shaders/shader.fs";
+    constexpr const char* SHELF_TEXTURE_PATH = "../../../resources/container.jpg";
+    constexpr const char* DUCKY_TEXTURE_PATH = "../../../resources/rubber-ducky.png";
 };
 /**
  * @namespace Renderer
@@ -549,13 +551,52 @@ namespace Renderer
          */
         std::vector<float> vertices_ =
         {
-            // positions          // colors           
-            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f, // top right
-            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f  // top left 
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+           -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+       
+           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+           -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+       
+           -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+           -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+           -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+       
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+       
+           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+       
+           -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+           -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+           -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
-
+                    //0, 1, 3, // First triangle: top right, bottom right, bottom left
+            //1, 2, 3 // Second triangle: bottom right, bottom left, top left
+            //0, 3, 5, // Third triangle: top right, top left, top middle
+            //1, 2, 5  // Fourth triangle: bottom right, bottom left, bottom middle
         /**
          * @brief A vector containing index data for drawing triangles.
          * 
@@ -563,13 +604,7 @@ namespace Renderer
          * vertices in counter-clockwise order. These indices map to the 
          * `vertices_` vector to define the geometry of the object.
          */
-        std::vector<unsigned int> indices_ =
-        {
-            0, 1, 3, // First triangle: top right, bottom right, bottom left
-            1, 2, 3 // Second triangle: bottom right, bottom left, top left
-            //0, 3, 5, // Third triangle: top right, top left, top middle
-            //1, 2, 5  // Fourth triangle: bottom right, bottom left, bottom middle
-        };
+        std::vector<unsigned int> indices_ ={};
 
     };
 

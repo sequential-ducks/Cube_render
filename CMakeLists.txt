@@ -30,8 +30,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
 
-# Set the source of the vcpkg package manager
-set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/vcpkg/installed/x64-linux/")
+# Set the source of the vcpkg package manager for Windows
+set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/vcpkg/installed/x64-windows/")
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 endif()
@@ -56,14 +56,17 @@ else()
     message(FATAL_ERROR "glad not found. Please install it via vcpkg.")
 endif()
 
-# Simple and fast multimedia library
-find_package(SFML COMPONENTS Graphics Window System CONFIG REQUIRED)
-if(SFML_FOUND)
-    message(STATUS "SFML3 found at ${SFML_DIR}")
-    target_link_libraries(${PROJECT_NAME} PRIVATE SFML::Graphics)
-else()
-    message(FATAL_ERROR "SFML3 not found. Install it with vcpkg.")
-endif()
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+include(FetchContent)
+FetchContent_Declare(SFML
+    GIT_REPOSITORY https://github.com/SFML/SFML.git
+    GIT_TAG 3.0.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(SFML)
+target_link_libraries(${PROJECT_NAME} PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
 
 include(FetchContent)
 # OpenGL Mathematics header library
@@ -85,7 +88,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${ipo_supported})
 # Enable debugging options for compiling in debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug build: enabling debug symbols and warnings and testing options")
-    target_compile_options(${PROJECT_NAME} PRIVATE -g -O0 -Wall -Wextra -Wpedantic)
+    target_compile_options(${PROJECT_NAME} PRIVATE /Zi /Od /W4) # Windows-specific debug flags
     include(CTest)
     enable_testing()
 endif()
