@@ -10,5 +10,5 @@ This is a student project demonstrating my first 3D rendering using OpenGL. The 
 
 ## Demo  
 Here is a video showcasing the application in action:  
-![Demo]("demo.gif")
+![Demo](demo.gif)
 
