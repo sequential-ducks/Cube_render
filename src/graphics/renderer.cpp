@@ -1,34 +1,5 @@
 #include "renderer.hpp"
 
-/**
- * @namespace CoordinateSystems
- * @brief Coordinate transform matrices
- */
-namespace Renderer::CoordinateSystems
-{
-    // The model matrix consists of translations, scaling and/or 
-    // rotations we'd like to apply to transform all object's vertices to 
-    // the global world space. 
-    // This rotates a plane sligthly along the negative x-axis.
-    glm::mat4 model = glm::rotate(
-        glm::mat4(1.0f),
-        glm::radians(-55.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f)
-    );
-    // Translate the scene forward (towards negative z) to give impression
-    // of moving forward
-    glm::mat4 view = glm::translate(
-        glm::mat4(1.0f),
-        glm::vec3(0.0f, 0.0f, -3.0f)
-    );
-    // Use a perspective projection
-    glm::mat4 projection = glm::perspective(
-        glm::radians(45.0f),
-        static_cast<float>(WindowAttributes::WINDOW_WIDTH / WindowAttributes::WINDOW_HEIGHT),
-        0.1f,
-        1000.0f
-    );
-}
 
 /**
  * @fn MessageCallback
@@ -56,9 +27,9 @@ void GLAPIENTRY MessageCallback
     (void)userParam;
     (void)severity;
     (void)length;
-    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+    void(fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
         (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-        type, severity, message);
+        type, severity, message));
 }
 
 Renderer::Image::Image(const std::string& imagePath)
@@ -67,9 +38,8 @@ Renderer::Image::Image(const std::string& imagePath)
     img_ = stbi_load(imagePath.c_str(), &imgWidth_, &imgHeight_,
         &imgNumberOfChannels_, 0);
 
-    stbi_set_flip_vertically_on_load(true);
     // Check if the image failed to load
-    if (img_ == NULL)
+    if (img_ == nullptr)
     {
         // Throw an exception with an error message if the image cannot be loaded
         throw std::domain_error("ERROR::CANNOT LOAD IMAGE " + imagePath);
@@ -85,7 +55,7 @@ Renderer::Image::~Image()
 
 Renderer::Texture::Texture(const std::string& imagePath) : Image(imagePath)
 {
-    // Generate a texture ID and store it in texIDmk_
+    // Generate a texture ID and store it in texID_
     glGenTextures(1, &texID_);
 
     // Bind the texture object to the GL_TEXTURE_2D target
@@ -170,7 +140,6 @@ void Renderer::Shader::checkShaderCompilation(const std::string& shaderType) con
     int success;
 
     // Buffer to store the error log if compilation fails
-    char infoLog[512];
 
     // Get the compilation status of the shader
     glGetShaderiv(shaderID_, GL_COMPILE_STATUS, &success);
@@ -178,7 +147,8 @@ void Renderer::Shader::checkShaderCompilation(const std::string& shaderType) con
     // If compilation failed, retrieve and throw the error log
     if (!success)
     {
-        glGetShaderInfoLog(shaderID_, 512, NULL, infoLog);
+	    char infoLog[512];
+	    glGetShaderInfoLog(shaderID_, 512, NULL, infoLog);
         throw std::runtime_error(std::string("ERROR::SHADER::") + shaderType +
             std::string("::COMPILATION_FAILED\n ")
             + infoLog);
@@ -229,7 +199,6 @@ Renderer::ShaderProgram::ShaderProgram(const unsigned int vertexShaderID,
     const unsigned int fragShaderID)
 {
     int success; // Variable to store the linking status
-    char infoLog[512]; // Buffer to store the error log if linking fails
 
     // Create a shader program
     shaderProgram_ = glCreateProgram();
@@ -247,7 +216,8 @@ Renderer::ShaderProgram::ShaderProgram(const unsigned int vertexShaderID,
     glGetProgramiv(shaderProgram_, GL_LINK_STATUS, &success);
     if (!success)
     {
-        // Retrieve and throw the error log if linking fails
+	    char infoLog[512];
+	    // Retrieve and throw the error log if linking fails
         glGetProgramInfoLog(shaderProgram_, 512, NULL, infoLog);
         throw std::runtime_error(std::string("ERROR::SHADER::PROGRAM::LINKING_FAILED\n")
             + infoLog);
@@ -262,7 +232,7 @@ Renderer::ShaderProgram::ShaderProgram(const unsigned int vertexShaderID,
 
 
 Renderer::GL_State::GL_State() : shaderProgram_{ nullptr }, myBuffer_{ nullptr },
-shelfTexture_{ nullptr }, duckyTexture_{ nullptr }
+shelfTexture_{ nullptr }, duckyTexture_{ nullptr }, clock_()
 {
     // Set the size of the initial OpenGL rendering context
     glViewport(0, 0, WindowAttributes::WINDOW_WIDTH,
@@ -273,11 +243,7 @@ shelfTexture_{ nullptr }, duckyTexture_{ nullptr }
     // Determine callback function that is called whenever an error occurs.
     glDebugMessageCallback(MessageCallback, 0);
 
-    // Enable face culling
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK); // cull back face
-    // Order of vertices 
-    glFrontFace(GL_CW); // GL_CCW for counter clock-wise
+
     // Set color buffer clear color 
     glClearColor
     (
@@ -296,7 +262,7 @@ shelfTexture_{ nullptr }, duckyTexture_{ nullptr }
     shaderProgram_ = std::make_unique<ShaderProgram>(vertexShader.getShaderID(),
         fragShader.getShaderID());
 
-    // Move vertice data to the GPU buffer
+    // Move vertices data to the GPU buffer
     myBuffer_ = std::make_unique<BufferSetup>();
 
     // Load a texture
@@ -305,39 +271,54 @@ shelfTexture_{ nullptr }, duckyTexture_{ nullptr }
 
 }
 
-void Renderer::GL_State::Draw(const std::unique_ptr<Window>& window)
+void Renderer::GL_State::draw(const std::unique_ptr<Window>& window) const
 {
-    const auto& clock = window.get()->getClock();
     // Use the shader program for rendering
     glUseProgram(shaderProgram_->getProgramID());
 
     // Activate the default texture and bind the shelf texture
     glActiveTexture(Renderer::GlConstants::DEFAULT_TEXTURE);
-    glBindTexture(GL_TEXTURE_2D, shelfTexture_.get()->getTexID());
+    glBindTexture(GL_TEXTURE_2D, shelfTexture_->getTexID());
 
     // Activate the next texture unit and bind the ducky texture
     glActiveTexture(Renderer::GlConstants::DEFAULT_TEXTURE + 1);
-    glBindTexture(GL_TEXTURE_2D, duckyTexture_.get()->getTexID());
+    glBindTexture(GL_TEXTURE_2D, duckyTexture_->getTexID());
 
     // Set the uniform variables in the shader for the textures
     // "texture1" corresponds to the shelf texture bound to texture unit 0
-    shaderProgram_.get()->setUniform("texture1",
-        Renderer::GlConstants::DEFAULT_TEXTURE_UNIT);
+    shaderProgram_->setUniform("texture1",
+                               Renderer::GlConstants::DEFAULT_TEXTURE_UNIT);
 
     // "texture2" corresponds to the ducky texture bound to texture unit 1
-    shaderProgram_.get()->setUniform("texture2",
-        Renderer::GlConstants::DEFAULT_TEXTURE_UNIT + 1);
+    shaderProgram_->setUniform("texture2",
+                               Renderer::GlConstants::DEFAULT_TEXTURE_UNIT + 1);
 
-    // Set the vertice coordinate transformation matrices in our shader program.
-    shaderProgram_.get()->setUniform("model",
-        Renderer::CoordinateSystems::model);
-    shaderProgram_.get()->setUniform("projection",
-        Renderer::CoordinateSystems::projection);
-    shaderProgram_.get()->setUniform("view", Renderer::CoordinateSystems::view);
+    glm::mat4 view = glm::mat4(1.0f);
+    // The model matrix consists of translations, scaling and/or 
+    // rotations we'd like to apply to transform all object's vertices to 
+    // the global world space. 
+    // This rotates a plane slightly along the negative x-axis.
+    glm::mat4 model = glm::rotate(
+        glm::mat4(1.0f),
+        clock_.getElapsedTime().asSeconds() * glm::radians(50.0f),
+        glm::vec3(0.5f, 1.0f, 0.0f));
+    // Translate the scene forward (towards negative z) to give impression
+    // of moving forward
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    // Use a perspective projection
+    glm::mat4 projection = glm::perspective(
+	    glm::radians(45.0f),
+	    static_cast<float>(WindowAttributes::WINDOW_WIDTH) / static_cast<float>(WindowAttributes::WINDOW_HEIGHT),
+	    0.1f,
+	    1000.0f
+    );
+    // Set the vertices coordinate transformation matrices in our shader program.
+    shaderProgram_->setUniform("model", model);
+    shaderProgram_->setUniform("projection", projection);
+    shaderProgram_->setUniform("view", view);
 
     // Bind the Vertex Array Object (VAO) that contains the vertex data
     glBindVertexArray(myBuffer_->getVAOId());
-
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
 }
@@ -345,23 +326,23 @@ void Renderer::GL_State::Draw(const std::unique_ptr<Window>& window)
 Renderer::BufferSetup::BufferSetup()
 {
     // Generate and bind the Vertex Array Object (VAO)
-    glGenVertexArrays(1, &VAO_);
-    glBindVertexArray(VAO_);
+    glGenVertexArrays(1, &vao_);
+    glBindVertexArray(vao_);
 
     // Generate and bind the Vertex Buffer Object (VBO)
-    glGenBuffers(1, &VBO_);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+    glGenBuffers(1, &vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 
     // Upload vertex data to the GPU
-    glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(float),
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices_.size(),
         vertices_.data(), Renderer::GlConstants::DRAW_TYPE);
 
     // Check if there are indices to set up an Element Buffer Object (EBO)
     if (!indices_.empty())
     {
         // Generate and bind the Element Buffer Object (EBO)
-        glGenBuffers(1, &EBO_);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
+        glGenBuffers(1, &ebo_);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
 
         // Upload index data to the GPU
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -370,43 +351,37 @@ Renderer::BufferSetup::BufferSetup()
     }
 
     // Adjust the VAO to hold specific vertex attributes 
-    enableVertexAttribute(Renderer::Vertex::Attribute::POSITION);
-    enableVertexAttribute(Renderer::Vertex::Attribute::COLOR);
-    enableVertexAttribute(Renderer::Vertex::Attribute::TEXTURE);
+    enableVertexAttribute(VSLocation::POSITION);
+    //enableVertexAttribute(Renderer::Vertex::Location::COLOR);
+    enableVertexAttribute(VSLocation::TEXTURE);
 }
 
 
-void Renderer::BufferSetup::enableVertexAttribute(const
-    Renderer::Vertex::Attribute& type)
+void Renderer::BufferSetup::enableVertexAttribute(const VSLocation& type)
     const
 {
-    unsigned int attributeLocation{ 0 };
-    unsigned int attributeSize{ 0 };
+    GLint attribute_location{ 0 };
+    GLint attribute_size{ 0 };
 
     // Determine the attribute location and size based on the attribute type
     switch (type)
     {
-    case Renderer::Vertex::Attribute::POSITION:
-        attributeLocation = Renderer::Vertex::Vector::POSITION_LOCATION;
-        attributeSize = Renderer::Vertex::Vector::POSITION_SIZE;
+    case VSLocation::POSITION:
+        attribute_location = VerticeDataVector::POSITION_LOCATION;
+        attribute_size = VerticeDataVector::POSITION_SIZE;
         break;
 
-    case Renderer::Vertex::Attribute::COLOR:
-        attributeLocation = Renderer::Vertex::Vector::COLOUR_LOCATION;
-        attributeSize = Renderer::Vertex::Vector::COLOUR_SIZE;
-        break;
-
-    case Renderer::Vertex::Attribute::TEXTURE:
-        attributeLocation = Renderer::Vertex::Vector::TEXTURE_LOCATION;
-        attributeSize = Renderer::Vertex::Vector::TEXTURE_SIZE;
+    case VSLocation::TEXTURE:
+        attribute_location = VerticeDataVector::TEXTURE_LOCATION;
+        attribute_size = VerticeDataVector::TEXTURE_SIZE;
         break;
     }
 
     // Define the vertex attribute pointer for the given type
-    glVertexAttribPointer(static_cast<unsigned int>(type), attributeSize,
+    glVertexAttribPointer(static_cast<unsigned int>(type), attribute_size,
         GL_FLOAT, GL_FALSE,
-        Renderer::Vertex::Vector::STRIDE * sizeof(float),
-        (void*)(attributeLocation * sizeof(float)));
+        VerticeDataVector::STRIDE * sizeof(float),
+        (void*)(attribute_location * sizeof(float)));
 
     // Enable the vertex attribute array for the given type
     glEnableVertexAttribArray(static_cast<unsigned int>(type));

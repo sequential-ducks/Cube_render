@@ -43,7 +43,7 @@ public:
      *         or the window cannot be opened.
      */
     Window();
-    virtual ~Window() = default;
+    virtual ~Window() override = default;
 
     // Getter for the clock_ member
     const sf::Clock* getClock() const { return clock_.get(); }

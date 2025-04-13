@@ -45,7 +45,6 @@
 #include <stb_image.h> // For loading image files into memory for textures.
 #include <array>       // For using std::array for fixed-size arrays.
 #include <glm/glm.hpp> // OpenGL Mathematics library
-#include "stb_image.h" // For loading image files from memory for textures.
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -58,63 +57,46 @@ namespace Env
     constexpr const char* SHELF_TEXTURE_PATH = "../../../resources/container.jpg";
     constexpr const char* DUCKY_TEXTURE_PATH = "../../../resources/rubber-ducky.png";
 };
+
+/**
+ * @namespace VerticeDataVector
+ * @brief This namespace provides constants and enumerations to define the
+ * layout of vertex attributes such as position, color, and texture
+ * coordinates.
+ **/
+namespace VerticeDataVector
+{
+    //The total number of components in a single vertex.
+    constexpr GLuint STRIDE = 5;
+    // The location for vertex position in the vertices data.
+    constexpr GLuint POSITION_LOCATION = 0;
+    // The location for vertex texture in the vertices data. 
+    constexpr GLuint TEXTURE_LOCATION = 3;
+    // The number of values in the position attribute.
+    constexpr GLuint POSITION_SIZE = 3;
+    // The number of values in the texture coordinate attribute.
+    constexpr GLuint TEXTURE_SIZE = 2;
+};
+
+
+/**
+ * @enum VSLocation
+ * @brief Enum class for location attributes in vertex shader
+ */
+enum class VSLocation : std::uint8_t
+{
+    POSITION = 0, ///< Vertex positions
+    TEXTURE,  ///< Texture coordinates  
+};
+
+
 /**
  * @namespace Renderer
  * @brief Provides a collection of classes, constants, and utilities for 
- *        rendering using OpenGL, including vertex management, texture handling, 
- *        shader compilation, and buffer setup.
+ *        rendering using OpenGL.
  */
 namespace Renderer 
-
 {
-    /**
-     * @namespace Vertex
-     * @brief Contains definitions and utilities for handling vertex attributes 
-     *        and their layout in vertex buffers. 
-     */
-    namespace Vertex 
-    {
-    /**
-     * @namespace Vertex::Vector
-     * @brief This namespace provides constants and enumerations to define the 
-     * layout of vertex attributes such as position, color, and texture 
-     * coordinates.
-     **/
-        namespace Vector
-        {
-            //The total number of components in a single vertex.
-            constexpr GLuint STRIDE = 8;
-            // The location for vertex position in the vertice data.
-            constexpr GLuint POSITION_LOCATION = 0;
-            // The location for vertex color in the vertice data.
-            constexpr GLuint COLOUR_LOCATION = 3;
-            // The location for vertex texture in the vertice data. 
-            constexpr GLuint TEXTURE_LOCATION = 6;
-            // The number of values in the position attribute.
-            constexpr GLuint POSITION_SIZE = 3;
-            // The number of values in the color attribute.
-            constexpr GLuint COLOUR_SIZE = 3;
-            // The number of values in the texture coordinate attribute.
-            constexpr GLuint TEXTURE_SIZE = 2;
-        }; /** @namespace Renderer::Vertex::Vector */ 
-        
-        /**
-         * @namespace Vertex::Attribute
-         * @brief Enum class for different types of vertex buffer data
-         */
-        enum class Attribute
-        {
-            POSITION = 0,   ///< Vertex positions
-            COLOR,          ///< Vertex colors
-            TEXTURE,       ///< Texture coordinates
-            // Add more buffer types as needed
-        };
-    }; /** @namespace Renderer::Vertex */ 
-
-
-    //namespace TextureAttributes
-    //{};
-
   /**
      * @namespace GlConstants
      * @brief Contains OpenGL constants used for rendering configurations.
@@ -138,11 +120,11 @@ namespace Renderer
         // Specifies the green component of the default clear color.
         constexpr GLfloat CLEAR_COLOR_GREEN = 0.3f;
         // Specifies the blue component of the default clear color.
-        constexpr GLfloat CLEAR_COLOR_BLUE = 0.3;
+        constexpr GLfloat CLEAR_COLOR_BLUE = 0.3f;
         // Specifies the opacity of the default clear color.
         constexpr GLfloat CLEAR_COLOR_OPACITY = 0.5f;
 
-    }; /** @namespace Renderer::GlConstants */ 
+    }; 
 
     /**
      * @class Image
@@ -160,7 +142,7 @@ namespace Renderer
          * @param imagePath The file path to the image to be loaded.
          * @throws std::domain_error If the image cannot be read from the path.
          */
-        Image(const std::string& imagePath);
+        explicit Image(const std::string& imagePath);
         virtual ~Image();
 
         // Delete copy constructor and copy assignment operator
@@ -189,7 +171,7 @@ namespace Renderer
      * textures. It encapsulates the loading of an image file and the creation 
      * of a 2D texture object.
      */
-    class Texture : public Image
+    class Texture final : public Image
     {
     public:
         /**
@@ -211,8 +193,8 @@ namespace Renderer
          * @note - Uploads the image data to the GPU using glTexImage2D.
          * @note - Generates mipmaps for the texture using glGenerateMipmap.
          */
-        Texture(const std::string& imagePath);
-        virtual ~Texture() = default;
+        explicit Texture(const std::string& imagePath);
+        virtual ~Texture() override = default;
 
         // Delete copy constructor and copy assignment operator
         Texture(const Texture&) = delete;
@@ -226,6 +208,7 @@ namespace Renderer
 
     private:
         /** @brief Unique identifier of the loaded texture. */
+        // ReSharper disable once CppInconsistentNaming
         unsigned int texID_;
     };
     /**
@@ -314,7 +297,7 @@ namespace Renderer
      * shaders. It provides functionality to construct a vertex shader
      * with given source code and to generate an ID for the shader.
     **/
-    class VertexShader : public Shader
+    class VertexShader final : public Shader
     {
     public:
         /**
@@ -328,33 +311,32 @@ namespace Renderer
          * @brief Default destructor for the VertexShader class.
          * @return void This function does not return a value.
         */
-        ~VertexShader() = default;
+        ~VertexShader() override = default;
 
         // Delete copy constructor and copy assignment operator
         VertexShader(const VertexShader&) = delete;  
         VertexShader& operator=(const VertexShader&) = delete;  
     };
 
-    class FragmentShader : public Shader
-    {
-    public:
-        /**
-         * @brief Constructs a FragmentShader object with the given source code.
-         * @return void This function does not return a value.
-         */
-        FragmentShader();
+    class FragmentShader final : public Shader  
+    {  
+    public:  
+       /**  
+        * @brief Constructs a FragmentShader object with the given source code.  
+        * @return void This function does not return a value.  
+        */  
+       FragmentShader();  
 
-        /**
-         * @fn FragmentShader::~FragmentShader()
-         * @brief Default destructor for the FragmentShader class.
-         * @return void This function does not return a value.
-        */
-        ~FragmentShader() = default;
+       /**  
+        * @fn FragmentShader::~FragmentShader()  
+        * @brief Default destructor for the FragmentShader class.  
+        * @return void This function does not return a value.  
+        */  
+       ~FragmentShader() override = default;  
 
-        // Delete copy constructor and copy assignment operator
-        FragmentShader(const FragmentShader&) = delete;  
-        FragmentShader& operator=(const FragmentShader&) = delete;  
-
+       // Delete copy constructor and copy assignment operator  
+       FragmentShader(const FragmentShader&) = delete;  
+       FragmentShader& operator=(const FragmentShader&) = delete;  
     };
 
     class ShaderProgram
@@ -502,7 +484,7 @@ namespace Renderer
          * @warning Ensure that the OpenGL context is properly initialized and 
          *          that the vertex buffer is bound before calling this function.
          */
-        void enableVertexAttribute(const Renderer::Vertex::Attribute &type) 
+        void enableVertexAttribute(const VSLocation& type)
         const;
 
         /**
@@ -514,7 +496,7 @@ namespace Renderer
          */
         GLuint getVAOId() const 
         { 
-            return VAO_; 
+            return vao_; 
         }
     
         /**
@@ -524,74 +506,73 @@ namespace Renderer
          * 
          * @return GLuint The unique ID of the EBO.
          */
-        GLuint getEBOId() const 
+        GLuint getEBOId() const
         { 
-            return EBO_; 
+            return ebo_; 
         }
     
     private:
         /**
          * @brief ID created for Vertex Array Object. 
          **/
-        GLuint VAO_;
+        GLuint vao_;
         /**
          * @brief ID created for Element Buffer Object. 
          **/
-        GLuint EBO_;
+        GLuint ebo_;
 
-        GLuint VBO_;
+        GLuint vbo_;
 
         /**
          * @brief A vector containing vertex data for a textured rectangle.
          * 
          * Each vertex is represented by 8 float values:
          * - 3 floats for position (x, y, z)
-         * - 3 floats for color (r, g, b)
          * - 2 floats for texture coordinates (u, v)
          */
         std::vector<float> vertices_ =
         {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-           -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-           -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+           -0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
        
-           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-           -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+           -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
+           -0.5f,  0.5f,  0.5f, 0.0f, 1.0f,
+           -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
        
-           -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-           -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-           -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+           -0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
+           -0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+           -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+           -0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
        
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+            0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
        
-           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-           -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-           -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+           -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
+            0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
+           -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+           -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
        
-           -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-           -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-           -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+           -0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
+           -0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+           -0.5f,  0.5f, -0.5f, 0.0f, 1.0f
         };
                     //0, 1, 3, // First triangle: top right, bottom right, bottom left
             //1, 2, 3 // Second triangle: bottom right, bottom left, top left
@@ -608,12 +589,12 @@ namespace Renderer
 
     };
 
-    class GL_State
+    class GL_State final
     {
     public:
         /**
          * @brief Constructor for the GL_State class, responsible for 
-         *        initializingthe OpenGL rendering context and setting up 
+         *        initializing the OpenGL rendering context and setting up 
          *        necessary resources.
          *
          * @note This constructor performs the following tasks:
@@ -621,9 +602,6 @@ namespace Renderer
          *       dimensions.
          * @note Enables OpenGL debug output and sets a callback for error 
          *       logging.
-         * @note Configures face culling to improve rendering performance by 
-         *       discarding back-facing polygons.
-         * @note Sets the front face orientation to clockwise (CW).
          * @note Specifies the clear color for the color buffer.
          * @note Clears the color buffer to apply the specified clear color.
          * @note Creates and compiles vertex and fragment shaders, and links 
@@ -645,7 +623,7 @@ namespace Renderer
          * It assumes that the OpenGL context is properly initialized and active.
          * @param window The window context where to draw. 
          */
-        void Draw(const std::unique_ptr<Window>& window);
+        void draw(const std::unique_ptr<Window>& window) const;
         
         // Delete copy constructor and copy assignment operator
         GL_State(const GL_State&) = delete;  
@@ -656,7 +634,8 @@ namespace Renderer
         std::unique_ptr<BufferSetup> myBuffer_;
         std::unique_ptr<Texture> shelfTexture_;
         std::unique_ptr<Texture> duckyTexture_;
+        sf::Clock clock_;
         
     };
 
-}/** @namespace Renderer */ 
+}

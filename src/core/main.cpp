@@ -1,5 +1,5 @@
 #include "renderer.hpp"
-#include <iostream> // for std::cerr 
+#include <iostream> 
 
 int main()
 {
@@ -22,19 +22,19 @@ int main()
     }
 
     // Main application loop
-    while (window.get()->isOpen())
+    while (window->isOpen())
     {
-        while (const std::optional event = window.get()->pollEvent())
+        while (const std::optional event = window->pollEvent())
         {
             if (event->is<sf::Event::Closed>())
             {
-                window.get()->close();
+	            window->close();
             }
-            else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+            else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
             {
-                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                if (key_pressed->scancode == sf::Keyboard::Scancode::Escape)
                 {
-                    window.get()->close();
+	                window->close();
                 }
             }
         }
@@ -42,10 +42,10 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render the scene using the OpenGL state
-        gl.get()->Draw(window);
+        gl->draw(window);
 
         // Display the rendered frame (swap front and back buffers)
-        window.get()->display();
+        window->display();
     }
 
     // ShaderProgram executed successfully
