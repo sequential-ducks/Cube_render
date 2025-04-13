@@ -1,7 +1,7 @@
 
 # OpenGL Cube Rendering Project  
 
-This is a student project demonstrating my first 3D rendering using OpenGL. The project features a 3D cube with a duck texture applied to its surface.  
+This project features a 3D cube with a duck texture applied to its surface.  
 
 ## Learning outcomes:
 - **3D Cube Rendering**: Learned how to render a cube. Learned about depth buffering, and dynamic transformations for spin effect.  
