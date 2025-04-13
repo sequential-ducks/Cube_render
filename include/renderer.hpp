@@ -8,30 +8,8 @@
  * buffer configurations. It also includes utility classes for handling 
  * images, textures, and OpenGL state management.
  * 
- * Key Components:
- * - Vertex: Contains definitions and utilities for handling vertex attributes 
- *           and their layout in vertex buffers.
- * - GlConstants: Provides constant values used for configuring rendering states.
- * - Image: Represents an image loaded from a file.
- * - Texture: Manages textures loaded from image files and provides functionality 
- *            for texture management.
- * - Shader: Represents GLSL shaders and provides functionality for shader 
- *           compilation and management.
- * - ShaderProgram: Manages shader programs by linking vertex and fragment shaders.
- * - BufferSetup: Handles OpenGL buffer setup and configuration, including VAOs, 
- *                VBOs, and EBOs.
- * - GL_State: Manages the OpenGL rendering context and sets up necessary 
- *             resources for rendering.
+ * @note This file assumes the presence of an OpenGL context
  * 
- * This file is part of a rendering system designed for use with SFML and OpenGL.
- * It provides a modular and extensible framework for creating and managing 
- * rendering pipelines.
- * 
- * @note This file assumes the presence of an OpenGL context and requires 
- *       appropriate OpenGL headers to be included.
- * 
- * @author [Anna Sivula]
- * @date [spring 2025]
  */
 
 #pragma once
