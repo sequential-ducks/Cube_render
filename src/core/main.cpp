@@ -18,7 +18,7 @@ int main()
     {
         // Handle any errors during initialization and exit the program
         std::cerr << except.what();
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     // Main application loop

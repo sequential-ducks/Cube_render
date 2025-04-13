@@ -54,7 +54,7 @@ namespace Env
 {
     constexpr const char* VERTEX_SHADER_PATH = "../../../shaders/shader.vs";
     constexpr const char* FRAG_SHADER_PATH = "../../../shaders/shader.fs";
-    constexpr const char* SHELF_TEXTURE_PATH = "../../../resources/container.jpg";
+    constexpr const char* SHELF_TEXTURE_PATH = "../../../resources/sky.jpg";
     constexpr const char* DUCKY_TEXTURE_PATH = "../../../resources/rubber-ducky.png";
 };
 

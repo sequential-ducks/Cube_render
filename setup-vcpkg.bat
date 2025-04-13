@@ -33,9 +33,6 @@ call bootstrap-vcpkg.bat
 echo Installing glad...
 vcpkg install glad:x64-windows
 %EXIT_ON_ERROR%
-echo Installing sfml...
-vcpkg install sfml:x64-windows
-%EXIT_ON_ERROR%
 
 echo vcpkg setup complete!
 
