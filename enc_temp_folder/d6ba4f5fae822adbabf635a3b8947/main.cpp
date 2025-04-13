@@ -21,7 +21,7 @@ int main()
         return 0;
     }
     // Disallow unlimited fps 
-    window->setFramerateLimit(60);
+    window->setFramerateLimit(120);
 
     // Main application loop
     while (window->isOpen())
