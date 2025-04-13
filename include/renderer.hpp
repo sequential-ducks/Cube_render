@@ -54,7 +54,7 @@ namespace Env
 {
     constexpr const char* VERTEX_SHADER_PATH = "../../../shaders/shader.vs";
     constexpr const char* FRAG_SHADER_PATH = "../../../shaders/shader.fs";
-    constexpr const char* SHELF_TEXTURE_PATH = "../../../resources/sky.jpg";
+    constexpr const char* SHELF_TEXTURE_PATH = "../../../resources/metal.jpg";
     constexpr const char* DUCKY_TEXTURE_PATH = "../../../resources/rubber-ducky.png";
 };
 
@@ -603,6 +603,7 @@ namespace Renderer
          * @note Enables OpenGL debug output and sets a callback for error 
          *       logging.
          * @note Specifies the clear color for the color buffer.
+         * @note Enables depth testing.
          * @note Clears the color buffer to apply the specified clear color.
          * @note Creates and compiles vertex and fragment shaders, and links 
          *       them into a shader program.

@@ -242,6 +242,7 @@ shelfTexture_{ nullptr }, duckyTexture_{ nullptr }, clock_()
     glEnable(GL_DEBUG_OUTPUT);
     // Determine callback function that is called whenever an error occurs.
     glDebugMessageCallback(MessageCallback, 0);
+    glEnable(GL_DEPTH_TEST);
 
 
     // Set color buffer clear color 
